@@ -1,5 +1,8 @@
 import type { ViewProps } from 'react-native';
-import type { WithDefault } from 'react-native/Libraries/Types/CodegenTypes';
+import type {
+  Int32,
+  WithDefault,
+} from 'react-native/Libraries/Types/CodegenTypes';
 import codegenNativeComponent from 'react-native/Libraries/Utilities/codegenNativeComponent';
 
 type CachePolicy =
@@ -7,12 +10,22 @@ type CachePolicy =
   | 'discWithCacheControl'
   | 'discNoCacheControl'
   | 'memoryAndDisc';
+
+type ContentFit = 'contain' | 'cover' | 'stretch' | 'center';
+
+type Headers = {
+  Authorization: string;
+};
 export interface NativeProps extends ViewProps {
+  cachePolicy?: WithDefault<CachePolicy, 'discWithCacheControl'>;
+  autoPlayGif?: WithDefault<boolean, false>;
+  contentFit?: WithDefault<ContentFit, 'contain'>;
+  tint?: WithDefault<Int32, undefined>;
   source: {
-    url: string;
-    cachePolicy?: WithDefault<CachePolicy, 'discWithCacheControl'>;
-    autoPlayGif?: WithDefault<boolean, false>;
+    uri: string;
   };
+  allowHardware?: WithDefault<boolean, false>;
+  headers?: Headers;
 }
 
 export default codegenNativeComponent<NativeProps>('FlashImageView');
