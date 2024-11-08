@@ -1,58 +1,50 @@
+import { FlashList } from '@shopify/flash-list';
+import { useCallback, useRef } from 'react';
 import {
   Dimensions,
-  FlatList,
   StyleSheet,
   View,
   processColor,
+  type ViewabilityConfig,
 } from 'react-native';
 import { FlashImage } from 'react-native-flash-image';
-import type { Int32 } from 'react-native/Libraries/Types/CodegenTypes';
-
+import Dataset from './dummy/data.json';
 const { width } = Dimensions.get('window');
+const estimatedListSize = {
+  width: width / 2,
+  height: width / 2,
+};
 export default function App() {
-  const imageUrs = [
-    'https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExaHN4ZWNveWIwaW4xZjMzdm9rMXI4dzBzNzhrY2gwdnNtaGpwa3k2aSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9dg/2JncG7P8IXTGKm7FRt/giphy.gif',
-    'https://images.unsplash.com/5/unsplash-kitsune-4.jpg',
-    'https://www.cloudynights.com/uploads/profile/photo-34923.gif?_r=0',
-    'https://nham24.com/assets/icons/new_logo.png',
-    'https://www.cloudynights.com/uploads/profile/photo-24641.gif?_r=0',
-    'https://imagery.go24.app/media/upload/Company/27603/024062715563527603.png?w=100',
-    'https://imagery.go24.app/media/upload/Company/27603/024062715563527603.png?w=800',
-  ];
+  const imageUrs = Dataset;
   console.log(processColor('red'));
+  const viewabilityConfig = useRef<ViewabilityConfig>({
+    waitForInteraction: true,
+    itemVisiblePercentThreshold: 50,
+    minimumViewTime: 600,
+    viewAreaCoveragePercentThreshold: 50,
+  }).current;
+  const renderItem = useCallback(({ item }) => {
+    return (
+      <FlashImage
+        style={styles.box}
+        autoPlayGif={false}
+        cachePolicy="discWithCacheControl"
+        source={{
+          uri: item,
+        }}
+      />
+    );
+  }, []);
   return (
     <View style={styles.container}>
-      {/* <FlatList
+      <FlashList
         data={imageUrs}
+        scrollEventThrottle={16}
+        viewabilityConfig={viewabilityConfig}
+        estimatedItemSize={width / 2}
+        estimatedListSize={estimatedListSize}
         showsVerticalScrollIndicator={false}
-        renderItem={({ item }) => {
-          return (
-            <Image
-              style={styles.box}
-              source={{
-                uri: item,
-              }}
-            />
-          );
-        }}
-      /> */}
-      <FlatList
-        data={imageUrs}
-        numColumns={2}
-        showsVerticalScrollIndicator={false}
-        renderItem={({ item }) => {
-          return (
-            <FlashImage
-              style={styles.box}
-              autoPlayGif={false}
-              tint={processColor('blue') as Int32}
-              cachePolicy="discWithCacheControl"
-              source={{
-                uri: item,
-              }}
-            />
-          );
-        }}
+        renderItem={renderItem}
       />
     </View>
   );

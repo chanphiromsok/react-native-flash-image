@@ -25,7 +25,6 @@ import com.flashimage.decoder.AnimatedPngDecoder
 
 @ReactModule(name = FlashImageViewManager.NAME)
 class FlashImageViewManager : FlashImageViewManagerSpec<FlashImageView>() {
-  private var imageLoader: ImageLoader? = null  // Track the ImageLoader
   override fun getName(): String {
     return NAME
   }
@@ -37,8 +36,6 @@ class FlashImageViewManager : FlashImageViewManagerSpec<FlashImageView>() {
   override fun onDropViewInstance(view: FlashImageView) {
     super.onDropViewInstance(view)
     view.dispose()
-    imageLoader?.shutdown()
-    imageLoader = null
   }
 
   override fun onAfterUpdateTransaction(view: FlashImageView) {
@@ -122,8 +119,8 @@ class FlashImageViewManager : FlashImageViewManagerSpec<FlashImageView>() {
             drawable.start()
           }
         },
-        onError = { _ ->
-          Log.d("ImageRequest", "Error")
+        onError = { error ->
+          Log.d("ImageRequest", "Error"+error.toString())
         }
       )
       .memoryCachePolicy(
@@ -140,7 +137,7 @@ class FlashImageViewManager : FlashImageViewManagerSpec<FlashImageView>() {
       )
       .allowHardware(allowHardware)
       .build()
-    imageLoader = ImageLoader.Builder(context).apply {
+    val imageLoader = ImageLoader.Builder(context).apply {
       if (autoPlayGif) {
         components {
           if (SDK_INT >= 28) {
@@ -152,44 +149,8 @@ class FlashImageViewManager : FlashImageViewManagerSpec<FlashImageView>() {
         }
       }
     }.build()
-    imageLoader!!.enqueue(imageRequest)
+    imageLoader.enqueue(imageRequest)
   }
-
-//  private fun setViewBorderRadius(view: FlashImageView, borderRadii: BorderRadii) {
-//    view.clipToOutline = true
-//    view.outlineProvider = object : ViewOutlineProvider() {
-//      override fun getOutline(view: View, outline: Outline) {
-//        val width = view.width
-//        val height = view.height
-//        val nonUniformRadiiSum = borderRadii.sum() - borderRadii.uniform
-//
-//        if (nonUniformRadiiSum == 0.0 || nonUniformRadiiSum == borderRadii.uniform) {
-//          outline.setRoundRect(0, 0, width, height, borderRadii.uniform.toFloat())
-//          return
-//        }
-//
-//        val radii = floatArrayOf(
-//          borderRadii.topLeft.toFloat(), borderRadii.topLeft.toFloat(),
-//          borderRadii.topRight.toFloat(), borderRadii.topRight.toFloat(),
-//          borderRadii.bottomRight.toFloat(), borderRadii.bottomRight.toFloat(),
-//          borderRadii.bottomLeft.toFloat(), borderRadii.bottomLeft.toFloat(),
-//        )
-//        val rect = Rect(0, 0, width, height)
-//        val path = Path().apply {
-//          addRoundRect(
-//            RectF(rect),
-//            radii,
-//            Path.Direction.CW
-//          )
-//        }
-//        if (SDK_INT >= Build.VERSION_CODES.R) {
-//          outline.setPath(path)
-//        } else {
-//          outline.setRoundRect(rect, borderRadii.sum().toFloat())
-//        }
-//      }
-//    }
-//  }
 
   companion object {
     const val NAME = "FlashImageView"
