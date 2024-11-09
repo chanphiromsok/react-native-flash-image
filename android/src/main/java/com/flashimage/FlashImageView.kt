@@ -2,6 +2,9 @@ package com.flashimage
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
+import android.util.Log
 import androidx.appcompat.widget.AppCompatImageView
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReactContext
@@ -12,7 +15,7 @@ import com.facebook.react.uimanager.events.Event
 
 @SuppressLint("ViewConstructor")
 class FlashImageView(context: Context) : AppCompatImageView(context) {
-
+//  private val outlineProvider = OutlineProvider(context)
   var uri: String? = null
   var headers: ReadableMap? = null
   var cachePolicy: String? = null
@@ -20,6 +23,33 @@ class FlashImageView(context: Context) : AppCompatImageView(context) {
   var tint: Int? = null
   var allowHardware: Boolean = false
   var autoPlayGif: Boolean = false
+  var recyclingKey: String? = null
+//  private var currentTarget: FlashImageViewWrapper? = null
+
+  override fun draw(canvas: Canvas) {
+    if ((drawable as? BitmapDrawable)?.bitmap?.isRecycled == true) {
+      Log.e("FlashImage", "Trying to use a recycled bitmap")
+//      recycleView()?.let { target ->
+//        (parent as? Flash)?.requestManager?.let { requestManager ->
+//          target.clear(requestManager)
+//        }
+//      }
+    }
+    super.draw(canvas)
+  }
+  // Method to recycle the view and return the current target
+//  fun recycleView(): FlashImageViewWrapper? {
+//    setImageDrawable(null)
+//
+//    val target = currentTarget?.apply {
+//      var isUsed = false // Mark as not used anymore
+//    }
+//
+//    currentTarget = null // Clear the current target reference
+//
+//    return target // Return the recycled target for further handling if needed
+//  }
+
 
   fun onSuccess(width: Int, height: Int) {
     dispatchEvent(EventName.OnSuccess, width, height)

@@ -15,5 +15,6 @@ abstract class FlashImageViewManagerSpec<T : View> : SimpleViewManager<T>() {
   abstract fun setTint(view: FlashImageView, tint: Int?)
   abstract fun setAllowHardware(view: FlashImageView, allowHardware: Boolean?)
   abstract fun setAutoPlayGif(view: FlashImageView, autoPlayGif: Boolean?)
+  abstract fun setRecyclingKey(view: FlashImageView, recyclingKey: String?)
 
 }

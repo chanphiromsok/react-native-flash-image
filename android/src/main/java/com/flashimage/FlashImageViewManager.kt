@@ -5,7 +5,6 @@ import android.graphics.drawable.Animatable
 import android.os.Build.VERSION.SDK_INT
 import android.util.Log
 import android.widget.ImageView.ScaleType
-import coil3.Image
 import coil3.ImageLoader
 import coil3.asDrawable
 import coil3.dispose
@@ -17,26 +16,26 @@ import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.request.allowHardware
 import coil3.request.crossfade
-import com.facebook.react.bridge.Arguments
-import com.facebook.react.bridge.ReactContext
 import com.facebook.react.bridge.ReadableMap
-import com.facebook.react.bridge.WritableMap
-import com.facebook.react.common.MapBuilder
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.uimanager.ThemedReactContext
-import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.annotations.ReactProp
-import com.facebook.react.uimanager.events.Event
 import com.flashimage.decoder.AnimatedPngDecoder
 
 
 @ReactModule(name = FlashImageViewManager.NAME)
 class FlashImageViewManager : FlashImageViewManagerSpec<FlashImageView>() {
+   private lateinit var imageLoader: ImageLoader
+
   override fun getName(): String {
     return NAME
   }
 
   override fun createViewInstance(reactContext: ThemedReactContext): FlashImageView {
+    Log.d("FlashImageViewManager",reactContext.surfaceId.toString())
+    if (!::imageLoader.isInitialized) {
+      imageLoader = createImageLoader(reactContext)
+    }
     return FlashImageView(reactContext)
   }
 
@@ -73,7 +72,6 @@ class FlashImageViewManager : FlashImageViewManagerSpec<FlashImageView>() {
   @ReactProp(name = "source")
   override fun setSource(view: FlashImageView, options: ReadableMap) {
     view.uri = options.getString("uri")
-
   }
 
   @ReactProp(name = "allowHardware")
@@ -162,19 +160,22 @@ class FlashImageViewManager : FlashImageViewManagerSpec<FlashImageView>() {
       )
       .allowHardware(allowHardware)
       .build()
-    val imageLoader = ImageLoader.Builder(context).apply {
-      if (autoPlayGif) {
-        components {
-          if (SDK_INT >= 28) {
-            add(AnimatedImageDecoder.Factory())
-          } else {
-            add(GifDecoder.Factory())
-          }
-          add(AnimatedPngDecoder.Factory())
-        }
+    imageLoader.enqueue(imageRequest)
+  }
+
+  override fun setRecyclingKey(view: FlashImageView, recyclingKey: String?) {
+    view.recyclingKey = recyclingKey
+  }
+
+
+  private fun createImageLoader(context: Context): ImageLoader {
+    return ImageLoader.Builder(context).apply {
+      components {
+        if (SDK_INT >= 28) add(AnimatedImageDecoder.Factory())
+        else add(GifDecoder.Factory())
+        add(AnimatedPngDecoder.Factory())
       }
     }.build()
-    imageLoader.enqueue(imageRequest)
   }
 
 

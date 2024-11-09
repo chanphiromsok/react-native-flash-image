@@ -21,6 +21,7 @@ export default function App() {
     minimumViewTime: 600,
     viewAreaCoveragePercentThreshold: 50,
   }).current;
+
   const renderItem = useCallback(({ item }: { item: string }) => {
     return (
       <FlashImage
