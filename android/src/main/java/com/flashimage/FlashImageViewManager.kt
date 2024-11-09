@@ -1,9 +1,11 @@
 package com.flashimage
 
+import android.content.Context
 import android.graphics.drawable.Animatable
 import android.os.Build.VERSION.SDK_INT
 import android.util.Log
 import android.widget.ImageView.ScaleType
+import coil3.Image
 import coil3.ImageLoader
 import coil3.asDrawable
 import coil3.dispose
@@ -15,11 +17,16 @@ import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.request.allowHardware
 import coil3.request.crossfade
+import com.facebook.react.bridge.Arguments
+import com.facebook.react.bridge.ReactContext
 import com.facebook.react.bridge.ReadableMap
+import com.facebook.react.bridge.WritableMap
 import com.facebook.react.common.MapBuilder
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.uimanager.ThemedReactContext
+import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.annotations.ReactProp
+import com.facebook.react.uimanager.events.Event
 import com.flashimage.decoder.AnimatedPngDecoder
 
 
@@ -43,12 +50,25 @@ class FlashImageViewManager : FlashImageViewManagerSpec<FlashImageView>() {
     loadImage(view)
   }
 
-  override fun getExportedCustomBubblingEventTypeConstants(): MutableMap<String, Any>? {
-    return MapBuilder.of(
-      "onSuccess", MapBuilder.of("registrationName", "onSuccess"),
-      "onError", MapBuilder.of("registrationName", "onError"),
-    )
-  }
+
+  override fun getExportedCustomBubblingEventTypeConstants(): Map<String, Any> =
+    mapOf(
+      "onSuccess" to
+        mapOf(
+          "phasedRegistrationNames" to
+            mapOf(
+              "bubbled" to "onSuccess",
+            )
+        ),
+      "onError" to
+        mapOf(
+          "phasedRegistrationNames" to
+            mapOf(
+              "bubbled" to "onError",
+            )
+        )
+      )
+
 
   @ReactProp(name = "source")
   override fun setSource(view: FlashImageView, options: ReadableMap) {
@@ -94,6 +114,11 @@ class FlashImageViewManager : FlashImageViewManagerSpec<FlashImageView>() {
     }
   }
 
+  @ReactProp(name = "borderRadius", defaultFloat = 0f)
+  override fun setBorderRadius(view: FlashImageView, borderRadius: Float) {
+//    view.setBorderRadius(borderRadius)
+  }
+
   private fun loadImage(flashImageView: FlashImageView) {
     val context = flashImageView.context
     val cachePolicy = flashImageView.cachePolicy
@@ -110,7 +135,6 @@ class FlashImageViewManager : FlashImageViewManagerSpec<FlashImageView>() {
       .data(flashImageView.uri)
       .httpHeaders(headersBuilder.build())
       .crossfade(transitionDuration)
-//      .transformations(RoundedCornersTransformation(20f,20f,20f,20f))
       .target(
         onSuccess = { result ->
           val drawable = result.asDrawable(flashImageView.resources)
@@ -118,9 +142,10 @@ class FlashImageViewManager : FlashImageViewManagerSpec<FlashImageView>() {
           if (autoPlayGif && drawable is Animatable) {
             drawable.start()
           }
+          flashImageView.onSuccess(result.width, result.height)
         },
         onError = { error ->
-          Log.d("ImageRequest", "Error"+error.toString())
+          flashImageView.onError(error?.width ?: 0,error?.height ?: 0)
         }
       )
       .memoryCachePolicy(
@@ -151,6 +176,7 @@ class FlashImageViewManager : FlashImageViewManagerSpec<FlashImageView>() {
     }.build()
     imageLoader.enqueue(imageRequest)
   }
+
 
   companion object {
     const val NAME = "FlashImageView"

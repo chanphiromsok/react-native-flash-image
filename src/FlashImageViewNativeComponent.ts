@@ -1,5 +1,6 @@
 import type { ViewProps } from 'react-native';
 import type {
+  BubblingEventHandler,
   Int32,
   WithDefault,
 } from 'react-native/Libraries/Types/CodegenTypes';
@@ -16,6 +17,11 @@ type ContentFit = 'contain' | 'cover' | 'stretch' | 'center';
 type Headers = {
   Authorization: string;
 };
+type ImageSuccess = {
+  width: Int32;
+  height: Int32;
+};
+
 export interface NativeProps extends ViewProps {
   cachePolicy?: WithDefault<CachePolicy, 'discWithCacheControl'>;
   autoPlayGif?: WithDefault<boolean, false>;
@@ -26,6 +32,7 @@ export interface NativeProps extends ViewProps {
   };
   allowHardware?: WithDefault<boolean, false>;
   headers?: Headers;
+  onSuccess?: BubblingEventHandler<ImageSuccess> | null;
 }
 
 export default codegenNativeComponent<NativeProps>('FlashImageView');
