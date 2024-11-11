@@ -6,6 +6,9 @@ import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
 import android.util.Log
 import androidx.appcompat.widget.AppCompatImageView
+import androidx.core.view.isVisible
+import coil3.dispose
+import coil3.imageLoader
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReactContext
 import com.facebook.react.bridge.ReadableMap
@@ -20,9 +23,33 @@ class FlashImageView(context: Context) : AppCompatImageView(context) {
   var cachePolicy: String? = null
   var transitionDuration: Int? = null
   var tint: Int? = null
-  var allowHardware: Boolean = false
+  var allowHardware: Boolean = true
   var autoPlayGif: Boolean = false
   var recyclingKey: String? = null
+  override fun draw(canvas: Canvas) {
+    // When the border-radii are not all the same, a convex-path
+    // is used for the Outline. Unfortunately clipping is not supported
+    // for convex-paths and we fallback to Canvas clipping.
+//    outlineProvider.clipCanvasIfNeeded(canvas, this)
+    // If we encounter a recycled bitmap here, it suggests an issue where we may have failed to
+    // finish clearing the image bitmap before the UI attempts to display it.
+    // One solution could be to suppress the error and assume that the second image view is currently responsible for displaying the correct view.
+    if ((drawable as? BitmapDrawable)?.bitmap?.isRecycled == true) {
+      Log.e("ExpoImage", "Trying to use a recycled bitmap")
+      recycleView()
+    }
+    super.draw(canvas)
+  }
+  fun recycleView() {
+    // Check if drawable is an instance of BitmapDrawable
+    val bitmapDrawable = drawable as? BitmapDrawable
+    // Check if bitmap is not null and not already recycled
+    if (bitmapDrawable?.bitmap != null && !bitmapDrawable.bitmap.isRecycled) {
+      bitmapDrawable.bitmap.recycle() // Recycle the bitmap
+    }
+    dispose()
+    setImageDrawable(null) // Clear the drawable reference
+  }
 
   fun onSuccess(width: Int, height: Int) {
     dispatchEvent(EventName.OnSuccess, width, height)

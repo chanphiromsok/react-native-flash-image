@@ -2,6 +2,7 @@ package com.flashimage
 
 import android.content.Context
 import android.graphics.drawable.Animatable
+import android.net.Uri
 import android.os.Build.VERSION.SDK_INT
 import android.util.Log
 import android.widget.ImageView.ScaleType
@@ -31,23 +32,6 @@ class FlashImageViewManager : FlashImageViewManagerSpec<FlashImageView>() {
     return NAME
   }
 
-  override fun createViewInstance(reactContext: ThemedReactContext): FlashImageView {
-    if (!::imageLoader.isInitialized) {
-      imageLoader = createImageLoader(reactContext)
-    }
-    return FlashImageView(reactContext)
-  }
-
-  override fun onDropViewInstance(view: FlashImageView) {
-    super.onDropViewInstance(view)
-    view.dispose()
-  }
-
-  override fun onAfterUpdateTransaction(view: FlashImageView) {
-    super.onAfterUpdateTransaction(view)
-    loadImage(view)
-  }
-
   override fun getExportedCustomBubblingEventTypeConstants(): Map<String, Any> =
     mapOf(
       "onSuccess" to
@@ -64,7 +48,24 @@ class FlashImageViewManager : FlashImageViewManagerSpec<FlashImageView>() {
               "bubbled" to "onError",
             )
         )
-      )
+    )
+
+  override fun createViewInstance(reactContext: ThemedReactContext): FlashImageView {
+    if (!::imageLoader.isInitialized) {
+      imageLoader = createImageLoader(reactContext)
+    }
+    return FlashImageView(reactContext)
+  }
+
+  override fun onDropViewInstance(view: FlashImageView) {
+    super.onDropViewInstance(view)
+    view.dispose()
+  }
+
+  override fun onAfterUpdateTransaction(view: FlashImageView) {
+    super.onAfterUpdateTransaction(view)
+    loadImage(view)
+  }
 
   @ReactProp(name = "allowHardware")
   override fun setAllowHardware(view: FlashImageView, allowHardware: Boolean?) {
@@ -116,6 +117,11 @@ class FlashImageViewManager : FlashImageViewManagerSpec<FlashImageView>() {
 
   @ReactProp(name = "source")
   override fun setSource(view: FlashImageView, options: ReadableMap) {
+    view.uri?.let {
+      Log.d(NAME, "Sources from view " + Uri.parse(it).lastPathSegment)
+      view.recycleView()
+      view.dispose()
+    }
     view.uri = options.getString("uri")
   }
 
@@ -164,9 +170,6 @@ class FlashImageViewManager : FlashImageViewManagerSpec<FlashImageView>() {
       .build()
     imageLoader.enqueue(imageRequest)
   }
-
-
-
 
   private fun createImageLoader(context: Context): ImageLoader {
     return ImageLoader.Builder(context).apply {

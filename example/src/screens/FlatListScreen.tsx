@@ -1,14 +1,25 @@
-import { useNavigation } from '@react-navigation/native';
-import { FlashList } from '@shopify/flash-list';
-import { useCallback } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useCallback, useRef } from 'react';
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  type ViewabilityConfig,
+} from 'react-native';
 import { clearCache, FlashImage } from 'react-native-flash-image';
 import Dataset from '../dummy/data.json';
-import { estimatedListSize, styles, width } from '../metric';
+import { styles } from '../metric';
 
 const imageUrs = [...new Set(Dataset)];
-export default function FlashImageScreen() {
-  const { navigate } = useNavigation();
+export default function FlatListScreen() {
+  const viewabilityConfig = useRef<ViewabilityConfig>({
+    waitForInteraction: true,
+    itemVisiblePercentThreshold: 50,
+    minimumViewTime: 600,
+    viewAreaCoveragePercentThreshold: 50,
+  }).current;
+
   const renderItem = useCallback(({ item }: { item: string }) => {
     return (
       <FlashImage
@@ -39,16 +50,9 @@ export default function FlashImageScreen() {
         }}
         label="Clear Cache"
       />
-      <ActionTouchable
-        onPress={() => {
-          navigate('FlatListScreen');
-        }}
-        label="FlatList"
-      />
-      <FlashList
+      <FlatList
         data={imageUrs}
-        estimatedItemSize={width / 2}
-        estimatedListSize={estimatedListSize}
+        viewabilityConfig={viewabilityConfig}
         showsVerticalScrollIndicator={false}
         renderItem={renderItem}
       />
