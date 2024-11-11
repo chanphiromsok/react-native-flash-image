@@ -11,3 +11,14 @@ export const prefetchImage = async (
 ): Promise<boolean> => {
   return FlashImageModule.prefetchImage(url, cachePolicy, headers);
 };
+
+export const clearCache = async (): Promise<boolean> => {
+  return FlashImageModule.clearCache();
+};
+
+export const prefetch = async (
+  sources: Array<string>,
+  headers: Record<string, string> = {}
+): Promise<boolean> => {
+  return FlashImageModule.prefetch(sources, headers);
+};
