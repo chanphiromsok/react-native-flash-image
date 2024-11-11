@@ -1,29 +1,22 @@
 package com.flashimage
 
 
-import android.content.Context
-import android.os.Build.VERSION.SDK_INT
-import coil3.ImageLoader
 import coil3.annotation.ExperimentalCoilApi
 import coil3.decode.BlackholeDecoder
-import coil3.gif.AnimatedImageDecoder
-import coil3.gif.GifDecoder
+import coil3.imageLoader
 import coil3.network.NetworkHeaders
 import coil3.network.httpHeaders
 import coil3.request.CachePolicy
 import coil3.request.ImageRequest
-import com.facebook.react.bridge.*
+import com.facebook.react.bridge.Promise
+import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
-import com.flashimage.decoder.AnimatedPngDecoder
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
-import okhttp3.Headers
+import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.bridge.ReadableArray
+import com.facebook.react.bridge.ReadableMap
 
 class FastImageModule(private val context: ReactApplicationContext) :
   ReactContextBaseJavaModule(context) {
-  private lateinit var imageLoader : ImageLoader
 
   override fun getName(): String = REACT_CLASS
 
@@ -33,9 +26,7 @@ class FastImageModule(private val context: ReactApplicationContext) :
   @OptIn(ExperimentalCoilApi::class)
   @ReactMethod
   fun prefetchImage(uri: String, cachePolicy: String,headers:ReadableMap?, promise: Promise) {
-    if (!::imageLoader.isInitialized) {
-      imageLoader = createImageLoader(context)
-    }
+
     val request = ImageRequest.Builder(context)
       .data(uri)
       .apply {
@@ -60,34 +51,36 @@ class FastImageModule(private val context: ReactApplicationContext) :
         }
       )
       .build()
-    imageLoader.enqueue(request)
+    reactApplicationContext.imageLoader.enqueue(request)
   }
 
-  suspend fun preloadImages(urls: List<String>) {
-    val imageLoader = ImageLoader.Builder(context).build()
-    coroutineScope {
-      urls.map { url ->
-        async {
-          imageLoader.execute(
-            ImageRequest.Builder(context)
-              .data(url)
-              .diskCachePolicy(CachePolicy.ENABLED) // Cache on disk for future use
-              .build()
-          )
-        }
-      }.awaitAll() // Waits for all images to preload
-    }
+  @ReactMethod()
+  fun clearCache(promise:Promise){
+    val imageLoader = reactApplicationContext.imageLoader
+    imageLoader.diskCache?.clear()
+    imageLoader.memoryCache?.clear()
+    promise.resolve(true)
   }
 
-private fun createImageLoader(context: Context): ImageLoader {
-  return ImageLoader.Builder(context).apply {
-    components {
-      if (SDK_INT >= 28) add(AnimatedImageDecoder.Factory())
-      else add(GifDecoder.Factory())
-      add(AnimatedPngDecoder.Factory())
+  @ReactMethod
+  fun prefetch(sources: ReadableArray,headers:ReadableMap?,promise: Promise) {
+    val imageLoader = reactApplicationContext.imageLoader
+    val requests = sources.toArrayList().map { url ->
+      ImageRequest.Builder(reactApplicationContext)
+        .data(url as String)
+        .apply {
+          if(headers != null){
+            val headersBuilder = NetworkHeaders.Builder()
+            for (entry in headers.entryIterator) {
+              headersBuilder[entry.key] = entry.value as String
+            }
+            httpHeaders(headersBuilder.build())
+          }
+        }.build()
     }
-  }.build()
-}
+    requests.forEach { imageLoader.enqueue(it) }
+    promise.resolve(true)
+  }
 
   companion object {
     private const val REACT_CLASS = "FlashImageModule"
