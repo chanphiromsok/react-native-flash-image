@@ -32,7 +32,6 @@ class FlashImageViewManager : FlashImageViewManagerSpec<FlashImageView>() {
   }
 
   override fun createViewInstance(reactContext: ThemedReactContext): FlashImageView {
-    Log.d("FlashImageViewManager",reactContext.surfaceId.toString())
     if (!::imageLoader.isInitialized) {
       imageLoader = createImageLoader(reactContext)
     }
@@ -48,7 +47,6 @@ class FlashImageViewManager : FlashImageViewManagerSpec<FlashImageView>() {
     super.onAfterUpdateTransaction(view)
     loadImage(view)
   }
-
 
   override fun getExportedCustomBubblingEventTypeConstants(): Map<String, Any> =
     mapOf(
@@ -67,12 +65,6 @@ class FlashImageViewManager : FlashImageViewManagerSpec<FlashImageView>() {
             )
         )
       )
-
-
-  @ReactProp(name = "source")
-  override fun setSource(view: FlashImageView, options: ReadableMap) {
-    view.uri = options.getString("uri")
-  }
 
   @ReactProp(name = "allowHardware")
   override fun setAllowHardware(view: FlashImageView, allowHardware: Boolean?) {
@@ -112,9 +104,19 @@ class FlashImageViewManager : FlashImageViewManagerSpec<FlashImageView>() {
     }
   }
 
+  @ReactProp(name = "recyclingKey")
+  override fun setRecyclingKey(view: FlashImageView, recyclingKey: String?) {
+    view.recyclingKey = recyclingKey
+  }
+
   @ReactProp(name = "borderRadius", defaultFloat = 0f)
   override fun setBorderRadius(view: FlashImageView, borderRadius: Float) {
 //    view.setBorderRadius(borderRadius)
+  }
+
+  @ReactProp(name = "source")
+  override fun setSource(view: FlashImageView, options: ReadableMap) {
+    view.uri = options.getString("uri")
   }
 
   private fun loadImage(flashImageView: FlashImageView) {
@@ -163,9 +165,7 @@ class FlashImageViewManager : FlashImageViewManagerSpec<FlashImageView>() {
     imageLoader.enqueue(imageRequest)
   }
 
-  override fun setRecyclingKey(view: FlashImageView, recyclingKey: String?) {
-    view.recyclingKey = recyclingKey
-  }
+
 
 
   private fun createImageLoader(context: Context): ImageLoader {

@@ -11,7 +11,7 @@ import { clearCache, FlashImage } from 'react-native-flash-image';
 import Dataset from '../dummy/data.json';
 import { estimatedListSize, styles, width } from '../metric';
 
-const imageUrs = Dataset;
+const imageUrs = [...new Set(Dataset)];
 export default function FlashImageScreen() {
   const viewabilityConfig = useRef<ViewabilityConfig>({
     waitForInteraction: true,
@@ -26,6 +26,10 @@ export default function FlashImageScreen() {
         style={styles.box}
         autoPlayGif={false}
         cachePolicy="discWithCacheControl"
+        recyclingKey={item}
+        onSuccess={(e) => {
+          console.log(e.nativeEvent?.uri);
+        }}
         source={{
           uri: item,
         }}
@@ -48,8 +52,8 @@ export default function FlashImageScreen() {
       />
       <FlashList
         data={imageUrs}
-        scrollEventThrottle={16}
-        viewabilityConfig={viewabilityConfig}
+        // scrollEventThrottle={16}
+        // viewabilityConfig={viewabilityConfig}
         estimatedItemSize={width / 2}
         estimatedListSize={estimatedListSize}
         showsVerticalScrollIndicator={false}

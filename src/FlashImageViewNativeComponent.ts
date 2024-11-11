@@ -20,6 +20,7 @@ type Headers = {
 type ImageSuccess = {
   width: Int32;
   height: Int32;
+  uri: string;
 };
 
 export interface NativeProps extends ViewProps {
@@ -32,6 +33,7 @@ export interface NativeProps extends ViewProps {
   };
   allowHardware?: WithDefault<boolean, false>;
   headers?: Headers;
+  recyclingKey?: string;
   onSuccess?: BubblingEventHandler<ImageSuccess> | null;
 }
 
